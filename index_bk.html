@@ -1,0 +1,253 @@
+<html>
+<head>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+  <div id="app">
+    <loader @emitdata="emitdata"></loader>
+    <data-table :dheader="data_header"
+                :histdata="hist_data"
+                :means="data_mean"
+                :vars="data_var"
+                :stds="data_std"
+                :mins="data_min"
+                :percentile25="data_25percentile"
+                :percentile50="data_50percentile"
+                :percentile75="data_75percentile"
+                :maxs="data_max"
+                :nancount="nan_count"
+                :nanratio="nan_ratio"></data-table>
+  </div>
+
+  <!-- template for file loader -->
+  <script type="text/x-template" id="loader">
+    <div>
+      <input id="load_file" type="file" @change="load_file" />
+    </div>
+  </script>
+
+  <script>
+    Vue.component('loader', {
+      template: '#loader',
+      methods: {
+        load_file: function(e) {
+          let self = this;
+
+          let file = e.target.files[0];
+          var reader = new FileReader();
+
+          reader.onload = function(event) {
+            self.file_data = event.target.result;
+            const url = "http://0.0.0.0:8090/post_file"
+            let fd = new FormData();
+            fd.append("file_data", event.target.result);
+            axios.post(url, fd).then(function(response){
+              self.$emit("emitdata", response.data);
+            });
+          };
+          reader.readAsBinaryString(file);
+        }
+      }
+    });
+  </script>
+
+  <!-- template for file loader -->
+  <script type="text/x-template" id="histogram">
+    <div>
+      <svg :id="'hist'+id" width="200" height="80"></svg>
+    </div>
+  </script>
+  <script>
+    Vue.component('histogram', {
+      template: '#histogram',
+      props: ["id", "histdata"],
+      mounted: function() {
+        this.draw_graph();
+      },
+      methods: {
+        get_avg: function(d) {
+          sum = 0
+          for(let i=0; i<d.length; i++){
+            sum+=d[i]
+          }
+          return sum / d.length;
+        },
+        get_color: function(d, min_x, max_x) {
+          avg = this.get_avg(d)
+          let h = 0
+          if(min_x == max_x) {
+            h = avg;
+          }else{
+            h = (avg - min_x) / (max_x - min_x);
+          }
+          let hsv = d3.hsl((1-h)*240, 0.7, 0.5);
+          return hsv+"";
+        },
+        draw_graph: function() {
+          const self = this;
+          let histdata = this.histdata;
+          let id = this.id;
+
+          let formatCount = d3.format(",.0f");
+
+          let margin = {top: 10, right: 10, bottom: 30, left: 10};
+          let svg = d3.select('#hist'+id);
+          let width = +svg.attr("width") - margin.left - margin.right;
+          let height = +svg.attr("height") - margin.top - margin.bottom;
+
+          svg.selectAll("*").remove();
+          let g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          let min_x = Math.min.apply(null, histdata)
+          let max_x = Math.max.apply(null, histdata)
+          let x = d3.scaleLinear()
+            .domain([min_x, max_x])
+            .rangeRound([0, width]);
+
+          let bins = d3.histogram()
+            .domain(x.domain())
+            .thresholds(d3.range(min_x, max_x, (max_x - min_x) / 24))
+            (histdata);
+
+          let y = d3.scaleLinear()
+            .domain([0, d3.max(bins, function(d) { return d.length; })])
+            .range([height, 0]);
+
+          let bar = g.selectAll(".bar")
+            .data(bins)
+            .enter().append("g")
+            .attr("class", "bar")
+            .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+
+          bar.append("rect")
+            .attr("x", 1)
+            .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+            .attr("height", function(d) { return height - y(d.length); })
+            .attr("fill", function(d) { return self.get_color(d, min_x, max_x); });
+
+          g.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)")
+            .style("font-size", "9px");
+        }
+      }
+    });
+  </script>
+
+  <!-- template for table -->
+  <script type="text/x-template" id="data_table">
+    <div>
+      <div>
+      <table>
+        <tr>
+          <th>histogram</th>
+          <th>カラム名</th>
+          <th>mean</th>
+          <th>var</th>
+          <th>std</th>
+          <th>min</th>
+          <th>25%</th>
+          <th>50%</th>
+          <th>75%</th>
+          <th>max</th>
+          <th>nan count</th>
+          <th>nan ratio</th>
+          <th>select</th>
+        </tr>
+        <tr v-for="(l, index) in dheader" :key="index">
+          <td><histogram :id="index" :histdata="histdata[index]"></histogram></td>
+          <td>{{l}}</td>
+          <td>{{ round(means[index]) }}</td>
+          <td>{{ round(vars[index]) }}</td>
+          <td>{{ round(stds[index]) }}</td>
+          <td>{{ round(mins[index]) }}</td>
+          <td>{{ round(percentile25[index]) }}</td>
+          <td>{{ round(percentile50[index]) }}</td>
+          <td>{{ round(percentile75[index]) }}</td>
+          <td>{{ round(maxs[index]) }}</td>
+          <td>{{ nancount[index] }}</td>
+          <td>{{ round(nanratio[index]) }}</td>
+          <td>
+            <div>
+              <input type="checkbox" :id="'select'+index" :value="index" v-model="select_index">
+              <label :for="'calc'+index"></label>
+            </div>
+          </td>
+        </tr>
+      </table>
+      </div>
+
+    </div>
+  </script>
+  <script>
+    Vue.component('data-table', {
+      template: '#data_table',
+      props: ["dheader", "histdata", "means", "vars", "stds", "mins", "percentile25", "percentile50", "percentile75", "maxs", "nancount", "nanratio"],
+      data: function() {
+        return {
+          "select_index": [],
+        }
+      },
+      methods: {
+        round: function(val) {
+          return Math.round(val*100)/100
+        },
+        export: function() {
+          console.log(this.select_index);
+          this.$emit("exportdata", this.select_index);
+        }
+      }
+    });
+  </script>
+
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: function() {
+        return {
+          "data_header": undefined,
+          "hist_data": undefined,
+          "data_mean": undefined,
+          "data_var": undefined,
+          "data_std": undefined,
+          "data_min": undefined,
+          "data_25percentile": undefined,
+          "data_50percentile": undefined,
+          "data_75percentile": undefined,
+          "data_max": undefined,
+          "nan_count": undefined,
+          "nan_ratio": undefined,
+        }
+      },
+      methods: {
+        emitdata: function(data){
+          this.data_header = data.data_header;
+          this.hist_data = data.hist_data;
+          this.data_mean = data.data_mean;
+          this.data_var = data.data_var;
+          this.data_std = data.data_std;
+          this.data_min = data.data_min;
+          this.data_25percentile = data.data_25percentile;
+          this.data_50percentile = data.data_50percentile;
+          this.data_75percentile = data.data_75percentile;
+          this.data_max = data.data_max;
+          this.nan_count = data.nan_count;
+          this.nan_ratio = data.nan_ratio;
+        },
+        exportdata: function(select_index) {
+          console.log(select_index);
+        }
+      },
+    })
+  </script>
+</body>
+</html>
