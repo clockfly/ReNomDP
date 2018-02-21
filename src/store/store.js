@@ -92,6 +92,14 @@ const store = new Vuex.Store({
     set_range: function(state, payload) {
       state.range.splice(0, state.range.length, ...payload.val);
     },
+    set_select: function(state, payload) {
+      const i = state.select_index.indexOf(payload.index);
+      if(payload.val && i == -1) {
+        state.select_index.push(payload.index);
+      }else{
+        state.select_index.splice(i, 1);
+      }
+    },
     set_select_all: function(state, payload) {
       if(state.select_index.length == state.data_header.length) {
         state.select_index.splice(0, state.select_index.length);

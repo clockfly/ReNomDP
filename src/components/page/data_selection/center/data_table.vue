@@ -2,109 +2,36 @@
   <div id='data_table'>
     <table class='scrollable'>
       <thead>
-        <tr>
-          <th>histogram</th>
-          <th class='grow_2'>column</th>
-          <th>data type</th>
-          <th>mean</th>
-          <th>var</th>
-          <th>std</th>
-          <th>min</th>
-          <th>25%</th>
-          <th>50%</th>
-          <th>75%</th>
-          <th>max</th>
-          <th>nan count</th>
-          <th>nan ratio</th>
-          <th>interpolate</th>
-          <th>select</th>
-        </tr>
-
-        <tr class='all_selector_row' v-if='show_time_series && row > 0'>
-          <th class='range_selector'>{{range[0]}}〜{{range[1]}}</th>
-          <th class='range_bar'>
-            <vue-slider :value='range'
-              :width='"100%"' :height='4' :dotSize='6'
-              :min='0' :max='row-1' :disable='false' :show='true'
-              :tooltip='false'
-              :bgStyle='{"backgroundColor": "#ccc"}'
-              :processStyle='{"backgroundColor": "#0762ad"}'
-              @callback='change_range'></vue-slider>
-          </th>
-        </tr>
+        <table-header></table-header>
       </thead>
 
       <tbody>
         <!-- without time series -->
-        <div class="table_row" v-if='!show_time_series' v-for='(l, index) in data_header' :key='index'>
-          <tr>
-            <td>
-              <div class="histogram_area" v-if='number_index[index]'>
-                <histogram :id='index' :histdata='hist_data[index]'></histogram>
-              </div>
-            </td>
-            <td class='grow_2'>{{l}}</td>
-            <td>
-              <span v-if='number_index[index]'>Number</span>
-              <span v-if='!number_index[index]'>Text</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_mean[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_var[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_std[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_min[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_25percentile[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_50percentile[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_75percentile[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(data_max[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ nan_count[index] }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span v-if='number_index[index]'>{{ round(nan_ratio[index]) }}</span>
-              <span v-if='!number_index[index]'>-</span>
-            </td>
-            <td>
-              <span>-</span>
-            </td>
-            <td>
-              <div class='input-group select_check_box'>
-                <input type='checkbox' :id='"select"+index' :value='index' v-model='select_index'>
-                <label :for='"select"+index'></label>
-              </div>
-            </td>
-          </tr>
-        </div>
+        <table-row-without-ts v-if='!show_time_series'
+          v-for='(l, index) in data_header'
+          :key='index'
+          :index='index'
+          :isnam='number_index[index]'
+          :histdata='hist_data[index]'
+          :colname='l'
+          :mean='round(data_mean[index])'
+          :vari='round(data_var[index])'
+          :std='round(data_std[index])'
+          :min='round(data_min[index])'
+          :percentile25='round(data_25percentile[index])'
+          :percentile50='round(data_50percentile[index])'
+          :percentile75='round(data_75percentile[index])'
+          :max='round(data_max[index])'
+          :nancount='nan_count[index]'
+          :nanratio='nan_ratio[index]*100+"%"'
+          @select='select'>
+        </table-row-without-ts>
 
         <!-- with time series -->
         <div class='table_row' v-if='show_time_series' v-for='(l, index) in data_header' :key='index'>
           <tr class='timeseries_text_row text_data_row' v-if='!number_index[index]'>
             <td></td>
-            <td class='grow_2'>{{l}}</td>
+            <td class='flex_grow_2'>{{l}}</td>
             <td>Text</td>
             <td>-</td>
             <td>-</td>
@@ -127,7 +54,7 @@
 
           <tr class='timeseries_text_row' v-if='number_index[index]'>
             <td></td>
-            <td class='grow_2'>{{l}}</td>
+            <td class='flex_grow_2'>{{l}}</td>
             <td>Number</td>
             <td>{{ round(data_mean[index]) }}</td>
             <td>{{ round(data_var[index]) }}</td>
@@ -166,12 +93,16 @@
 import {mapState} from 'vuex'
 import vueSlider from 'vue-slider-component';
 import Histogram from './histogram.vue'
+import TableHeader from './table_header.vue'
+import TableRowWithoutTimeseries from './table_row_without_timeseries.vue'
 import TimeSeries from './timeseries.vue'
 
 export default {
   name: 'DataTable',
   components: {
     'histogram': Histogram,
+    'table-header': TableHeader,
+    'table-row-without-ts': TableRowWithoutTimeseries,
     'timeseries': TimeSeries,
     'vue-slider': vueSlider,
   },
@@ -219,10 +150,6 @@ export default {
     }
   },
   methods: {
-    change_range: function(val) {
-      this.range.splice(0,this.range.length,...val);
-      this.$store.commit('set_range', {'val': val});
-    },
     round: function(val) {
       return Math.round(val*100)/100;
     },
@@ -232,14 +159,12 @@ export default {
         'val': parseInt(event.target.value),
       });
     },
-    // set_interpolate_all: function(event) {
-    //   this.$store.commit('set_interpolate_all', {
-    //     'val': parseInt(event.target.value),
-    //   });
-    //   this.$store.dispatch('interpolate_all', {
-    //     'val': parseInt(event.target.value),
-    //   });
-    // },
+    select: function(value) {
+      this.$store.commit('set_select', {
+        'index': value.index,
+        'val': value.val,
+      });
+    }
   }
 }
 </script>
@@ -264,43 +189,6 @@ export default {
     max-height: calc(100vh - 150px);
     thead {
       border: none;
-
-      tr {
-        border: none;
-        border-bottom: 1px solid $border-color;
-
-        th {
-          height: $all-selector-row-height;
-          padding: 0;
-          font-size: $table-font-size;
-          font-weight: normal;
-          background-color: $background-color;
-          text-align: center;
-          line-height: $all-selector-row-height;
-          border: none;
-        }
-      }
-      .all_selector_row {
-        border-bottom: 1px solid $border-color;
-        th {
-          height: $all-selector-row-height;
-          line-height: $all-selector-row-height;
-          .select_check_box {
-            margin-left: 10px;
-            padding-top: 16px;
-          }
-        }
-        .range_selector {
-          flex-grow: 1;
-          height: 100%;
-        }
-        .range_bar {
-          flex-grow: 14;
-          height: 100%;
-          padding-top: 12px;
-          padding-right: 12px;
-        }
-      }
     }
 
     tbody {
@@ -378,7 +266,7 @@ export default {
         }
       }
     }
-    .grow_2 {
+    .flex_grow_2 {
       flex-grow: 2;
     }
   }
