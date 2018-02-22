@@ -3,17 +3,28 @@
     <tr>
       <th>histogram</th>
       <th class='flex_grow_2'>column</th>
-      <th>data type</th>
-      <th>mean</th>
-      <th>var</th>
-      <th>std</th>
-      <th>min</th>
-      <th>25%</th>
-      <th>50%</th>
-      <th>75%</th>
-      <th>max</th>
-      <th>nan count</th>
-      <th>nan ratio</th>
+      <th :class='{active: selected_column === "dtype"}'
+        @click='select_column("dtype")'>data type</th>
+      <th :class='{active: selected_column === "mean"}'
+        @click='select_column("mean")'>mean</th>
+      <th :class='{active: selected_column === "var"}'
+        @click='select_column("var")'>var</th>
+      <th :class='{active: selected_column === "std"}'
+        @click='select_column("std")'>std</th>
+      <th :class='{active: selected_column === "min"}'
+        @click='select_column("min")'>min</th>
+      <th :class='{active: selected_column === "25%"}'
+        @click='select_column("25%")'>25%</th>
+      <th :class='{active: selected_column === "50%"}'
+        @click='select_column("50%")'>50%</th>
+      <th :class='{active: selected_column === "75%"}'
+        @click='select_column("75%")'>75%</th>
+      <th :class='{active: selected_column === "max"}'
+        @click='select_column("max")'>max</th>
+      <th :class='{active: selected_column === "nan_count"}'
+        @click='select_column("nan_count")'>nan count</th>
+      <th :class='{active: selected_column === "nan_ratio"}'
+        @click='select_column("nan_ratio")'>nan ratio</th>
       <th>interpolate</th>
       <th>select</th>
     </tr>
@@ -57,7 +68,8 @@ export default {
   components: {
     'vue-slider': vueSlider,
   },
-  computed: mapState(['row', 'show_time_series', 'range', 'timeseries_range']),
+  computed: mapState(['row', 'show_time_series', 'range',
+    'timeseries_range', 'selected_column']),
   methods: {
     change_range: function(val) {
       this.$store.commit('set_range', {'val': val});
@@ -65,6 +77,9 @@ export default {
     change_timeseries_range: function(val) {
       this.$store.commit('set_timeseries_range', {'val': val});
     },
+    select_column: function(name) {
+      this.$store.commit('set_select_column_name', {'name': name});
+    }
   }
 }
 </script>
@@ -73,6 +88,7 @@ export default {
 .table_header{
   $all-selector-row-height: 34px;
   $background-color: #f8f8f8;
+  $background-color-active: #f0f0f0;
   $border-color: #cccccc;
   $table-font-size: 10px;
 
@@ -117,6 +133,9 @@ export default {
   }
   .flex_grow_2 {
     flex-grow: 2;
+  }
+  .active {
+    background-color: $background-color-active;
   }
 }
 </style>

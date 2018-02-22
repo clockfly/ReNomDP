@@ -12,6 +12,7 @@ const store = new Vuex.Store({
     select_index: [],
     range: [0, 0],
     timeseries_range: [0, 0],
+    selected_column: undefined,
 
     row: 0,
     columns: 0,
@@ -63,8 +64,8 @@ const store = new Vuex.Store({
       state.nan_ratio = payload.data.nan_ratio;
       state.interpolate_list = payload.data.interpolate_list;
 
-      if(state.row > 1000) {
-        state.timeseries_range.splice(0, state.timeseries_range.length, 0, 1000);
+      if(state.row > 500) {
+        state.timeseries_range.splice(0, state.timeseries_range.length, 0, 500);
       }else{
         state.timeseries_range.splice(0, state.timeseries_range.length, 0, payload.data.row-1);
       }
@@ -124,9 +125,8 @@ const store = new Vuex.Store({
         }
       }
     },
-    set_select_index: function(state, payload) {
-      state.select_index.splice(0, state.select_index.length);
-      state.select_index.push(...payload.val);
+    set_select_column_name: function(state, payload) {
+      state.selected_column = payload.name;
     },
     set_timeseries_range: function(state, payload) {
       state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);

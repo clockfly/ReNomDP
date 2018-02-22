@@ -52,8 +52,8 @@
       </td>
       <td class='timeseries_graph'>
         <timeseries :id='index'
-          :timedata='histdata.slice(timeseries_range[0], timeseries_range[1])'
-          :nanindex='nanindex.slice(timeseries_range[0], timeseries_range[1])'
+          :timedata='histdata.slice(timeseries_range[0], timeseries_range[1]+1)'
+          :nanindex='nanindex.slice(timeseries_range[0], timeseries_range[1]+1)'
           :miny='Math.min(...histdata)'
           :maxy='Math.max(...histdata)'>
         </timeseries>
@@ -78,7 +78,7 @@ export default {
           'percentile50', 'percentile75',
           'max', 'nancount', 'nanratio', 'nanindex',
           'interpolate', 'selected'],
-  computed: mapState(['timeseries_range']),
+  computed: mapState(['timeseries_range', 'selected_column']),
   methods: {
     select: function(event) {
       const value = {
@@ -88,12 +88,6 @@ export default {
       this.$emit('select', value);
     }
   },
-  created: function() {
-    this.$store.commit('set_loading', {'loading': true});
-  },
-  mounted: function() {
-    this.$store.commit('set_loading', {'loading': false});
-  }
 }
 </script>
 
@@ -102,6 +96,7 @@ export default {
   $table-row-height: 92px;
   $timeseries-text-row-height: 40px;
   $background-color: #f8f8f8;
+  $background-color-active: #f0f0f0;
   $border-color: #cccccc;
   $table-font-size: 10px;
 
@@ -175,6 +170,10 @@ export default {
 
   .flex_grow_2 {
     flex-grow: 2;
+  }
+
+  .active {
+    background-color: $background-color-active;
   }
 }
 </style>

@@ -7,47 +7,47 @@
         </div>
       </td>
       <td class='flex_grow_2'>{{ colname }}</td>
-      <td>
+      <td :class='{active: selected_column === "dtype"}'>
         <span v-if='isnum'>Number</span>
         <span v-if='!isnum'>Text</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "mean"}'>
         <span v-if='isnum'>{{ mean }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "var"}'>
         <span v-if='isnum'>{{ vari }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "std"}'>
         <span v-if='isnum'>{{ std }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "min"}'>
         <span v-if='isnum'>{{ min }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "25%"}'>
         <span v-if='isnum'>{{ percentile25 }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "50%"}'>
         <span v-if='isnum'>{{ percentile50 }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "75%"}'>
         <span v-if='isnum'>{{ percentile75 }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "max"}'>
         <span v-if='isnum'>{{ max }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "nan_count"}'>
         <span v-if='isnum'>{{ nancount }}</span>
         <span v-if='!isnum'>-</span>
       </td>
-      <td>
+      <td :class='{active: selected_column === "nan_ratio"}'>
         <span v-if='isnum'>{{ nanratio }}</span>
         <span v-if='!isnum'>-</span>
       </td>
@@ -77,6 +77,7 @@ export default {
           'vari', 'std', 'min', 'percentile25',
           'percentile50', 'percentile75',
           'max', 'nancount', 'nanratio', 'selected'],
+          computed: mapState(['selected_column']),
   methods: {
     select: function(event) {
       const value = {
@@ -93,6 +94,7 @@ export default {
 .table_row {
   $table-row-height: 92px;
   $background-color: #f8f8f8;
+  $background-color-active: #f0f0f0;
   $border-color: #cccccc;
   $table-font-size: 10px;
 
@@ -141,6 +143,9 @@ export default {
 
   .flex_grow_2 {
     flex-grow: 2;
+  }
+  .active {
+    background-color: $background-color-active;
   }
 }
 </style>

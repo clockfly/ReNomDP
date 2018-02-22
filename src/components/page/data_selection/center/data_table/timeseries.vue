@@ -191,20 +191,16 @@ export default {
           });
 
         this.draw_line(svg, this.line_data, this.line, '#5c94aa');
-        this.draw_rect(svg);
+        // this.draw_rect(svg);
         this.draw_interpolate_area(svg);
         this.draw_axis(svg);
       }
       // console.timeEnd('time_draw_row');
     },
-    update_rect: function() {
-      let svg = this.timeseries_element.select('svg');
-      svg.selectAll('rect').remove();
-      this.draw_rect(svg);
-    },
     update_graph: function() {
       let svg = this.timeseries_element.select('svg');
       svg.selectAll('path').remove();
+      svg.selectAll('rect').remove();
       svg.selectAll('g').remove();
 
       this.draw_line(svg, this.line_data, this.line, '#5c94aa');
