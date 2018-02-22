@@ -2,61 +2,61 @@
   <div class="table_row">
     <tr>
       <td>
-        <div class="histogram_area" v-if='isnam'>
+        <div class="histogram_area" v-if='isnum'>
           <histogram :id='index' :histdata='histdata'></histogram>
         </div>
       </td>
       <td class='flex_grow_2'>{{ colname }}</td>
       <td>
-        <span v-if='isnam'>Number</span>
-        <span v-if='!isnam'>Text</span>
+        <span v-if='isnum'>Number</span>
+        <span v-if='!isnum'>Text</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ mean }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ mean }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ vari }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ vari }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ std }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ std }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ min }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ min }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ percentile25 }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ percentile25 }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ percentile50 }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ percentile50 }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ percentile75 }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ percentile75 }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ max }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ max }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ nancount }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ nancount }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
-        <span v-if='isnam'>{{ nanratio }}</span>
-        <span v-if='!isnam'>-</span>
+        <span v-if='isnum'>{{ nanratio }}</span>
+        <span v-if='!isnum'>-</span>
       </td>
       <td>
         <span>-</span>
       </td>
       <td>
-        <div class='input-group'>
-          <input type='checkbox' :id='"select"+index' @change='select'>
+        <div class='input-group select_check_box'>
+          <input type='checkbox' :id='"select"+index' :checked='selected' @change='select'>
           <label :for='"select"+index'></label>
         </div>
       </td>
@@ -73,7 +73,7 @@ export default {
   components: {
     'histogram': Histogram,
   },
-  props: ['index', 'isnam', 'histdata', 'colname', 'mean',
+  props: ['index', 'isnum', 'histdata', 'colname', 'mean',
           'vari', 'std', 'min', 'percentile25',
           'percentile50', 'percentile75',
           'max', 'nancount', 'nanratio', 'selected'],
@@ -83,6 +83,7 @@ export default {
         'val': event.target.checked,
         'index': this.index,
       }
+      this.$emit('select', value);
     }
   }
 }
@@ -126,7 +127,7 @@ export default {
         height: $table-font-size;
       }
       input[type='checkbox']+label:after {
-        left: 0.55rem;
+        left: 0.6rem;
         width: $table-font-size;
         height: $table-font-size;
         background-color: #666;

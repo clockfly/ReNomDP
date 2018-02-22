@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import DataTable from './data_table.vue'
+import DataTable from './data_table/data_table.vue'
 import ExportButton from './export_button.vue'
 import FileLoader from './file_loader.vue'
 import FileSummary from './file_summary.vue'
