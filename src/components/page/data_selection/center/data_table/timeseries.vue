@@ -115,13 +115,16 @@ export default {
   },
   methods: {
     draw_line: function(svg, line, color) {
+      console.time('time_draw_line');
       svg.append('path')
         .datum(this.line_data)
         .attr('style', function(d) {
           return 'fill: none; stroke: '+color+';'})
         .attr('d', line);
+      console.timeEnd('time_draw_line');
     },
     draw_rect: function(svg) {
+      console.time('time_draw_rect');
       svg.append('rect')
         .attr('x', this.scale_x(this.range[0]))
         .attr('y', 0)
@@ -129,8 +132,10 @@ export default {
         .attr('height', this.height)
         .attr('fill', '#ddd')
         .attr('opacity', 0.3);
+      console.timeEnd('time_draw_rect');
     },
     draw_nan_area_rect(svg) {
+      console.time('time_draw_nan_rect');
       let last_i = false;
       let nan_start = 0;
       let nan_end = 0;
@@ -152,6 +157,7 @@ export default {
             .attr('class', 'nan_area_rect');
         }
       }
+      console.timeEnd('time_draw_nan_rect');
     },
     draw_axis: function(svg) {
       svg.append('g')
@@ -160,6 +166,7 @@ export default {
         .call(d3.axisBottom(this.scale_x));
     },
     draw_graph: function() {
+      console.time('time_draw_row');
       const self = this;
       if(self.timedata) {
         let svg = self.timeseries_element.append('svg')
@@ -180,6 +187,7 @@ export default {
         this.draw_nan_area_rect(svg);
         this.draw_axis(svg);
       }
+      console.timeEnd('time_draw_row');
     },
     update_rect: function() {
       let svg = this.timeseries_element.select('svg');

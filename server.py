@@ -279,9 +279,9 @@ if __name__ == '__main__':
     parser.add_argument('--port', default='8090', help='Server port')
     args = parser.parse_args()
 
-    init_db()
     if not os.path.isdir(DATA_DIR):
         os.makedirs(DATA_DIR)
+    init_db()
 
     handler = DataFileEventHandler(patterns=['*.csv'])
     observer = Observer()

@@ -29,7 +29,7 @@
         </table-row-without-ts>
 
         <!-- with time series -->
-        <table-row-with-ts v-if='show_time_series'
+        <table-row-with-ts v-if='show_time_series && index < 10'
           v-for='(l, index) in data_header'
           :key='index'
           :index='index'
