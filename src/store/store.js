@@ -10,7 +10,8 @@ const store = new Vuex.Store({
     files: {},
     interpolate_items: ['None', 'Linear', 'Spline', 'Nearest'],
     select_index: [],
-    range: [0, 100],
+    range: [0, 0],
+    timeseries_range: [0, 0],
 
     row: 0,
     columns: 0,
@@ -61,6 +62,13 @@ const store = new Vuex.Store({
       state.nan_count = payload.data.nan_count;
       state.nan_ratio = payload.data.nan_ratio;
       state.interpolate_list = payload.data.interpolate_list;
+
+      if(state.row > 1000) {
+        state.timeseries_range.splice(0, state.timeseries_range.length, 0, 1000);
+      }else{
+        state.timeseries_range.splice(0, state.timeseries_range.length, 0, payload.data.row-1);
+      }
+      state.range.splice(0, state.range.length, 0, payload.data.row-1);
     },
     set_loading: function(state, payload) {
       state.loading = payload.loading;
@@ -119,6 +127,9 @@ const store = new Vuex.Store({
     set_select_index: function(state, payload) {
       state.select_index.splice(0, state.select_index.length);
       state.select_index.push(...payload.val);
+    },
+    set_timeseries_range: function(state, payload) {
+      state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);
     },
     toggle_time_series: function(state, payload) {
       state.show_time_series = !state.show_time_series;

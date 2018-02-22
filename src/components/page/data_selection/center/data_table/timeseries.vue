@@ -17,7 +17,7 @@ import {mapState} from 'vuex'
 
 export default {
   name: "TimeSeries",
-  props: ["id", "timedata", 'nanindex'],
+  props: ["id", "timedata", 'nanindex', 'miny', 'maxy'],
   data: function() {
     return {
       'show_interpolate_selector': false,
@@ -33,7 +33,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['range', 'interpolate_items', 'interpolate_list']),
+    ...mapState(['range', 'timeseries_range', 'interpolate_items', 'interpolate_list']),
     timeseries_element() {
       return d3.select('#time'+this.id);
     },
@@ -43,17 +43,14 @@ export default {
     inverse_line() {
       const self = this;
       return d3.line()
-        .defined(function(d, i) {
-          return (self.nanindex[i-1] || self.nanindex[i] || self.nanindex[i+1]);
-        })
-        .x(function(d, i) { return self.scale_x(i); })
-        .y(function(d) { return self.scale_y(d); });
+        .x(function(d) { return self.scale_x(d.x); })
+        .y(function(d) { return self.scale_y(d.y); });
     },
     line() {
       const self = this;
       return d3.line()
         .defined(function(d,i) { return !self.nanindex[i]; })
-        .x(function(d, i) { return self.scale_x(i); })
+        .x(function(d, i) { return self.scale_x(self.min_axis_x + i); })
         .y(function(d) { return self.scale_y(d); });
     },
     line_data() {
@@ -63,14 +60,11 @@ export default {
       });
       return data;
     },
+    min_axis_x() {
+      return this.timeseries_range[0];
+    },
     max_axis_x() {
-      return this.nanindex.length - 1;
-    },
-    max_y() {
-      return Math.max(...this.timedata);
-    },
-    min_y() {
-      return Math.min(...this.timedata);
+      return this.timeseries_range[1];
     },
     time_data_with_null() {
       let timedata = [];
@@ -87,12 +81,12 @@ export default {
     scale_x() {
       const width = this.svg_width - this.margin.left - this.margin.right;
       return d3.scaleLinear()
-        .domain([0, this.max_axis_x])
+        .domain([this.min_axis_x, this.max_axis_x])
         .rangeRound([0, width]);
     },
     scale_y() {
       return d3.scaleLinear()
-        .domain([this.min_y, this.max_y])
+        .domain([this.miny, this.maxy])
         .rangeRound([this.height, 0]);
     },
     svg_height() {
@@ -107,24 +101,21 @@ export default {
   },
   watch: {
     timedata: function() {
-      this.update_path();
+      this.update_graph();
     },
     range: function() {
-      this.update_rect();
+      this.update_graph();
     }
   },
   methods: {
-    draw_line: function(svg, line, color) {
-      console.time('time_draw_line');
+    draw_line: function(svg, data, line, color) {
       svg.append('path')
-        .datum(this.line_data)
+        .datum(data)
         .attr('style', function(d) {
           return 'fill: none; stroke: '+color+';'})
         .attr('d', line);
-      console.timeEnd('time_draw_line');
     },
     draw_rect: function(svg) {
-      console.time('time_draw_rect');
       svg.append('rect')
         .attr('x', this.scale_x(this.range[0]))
         .attr('y', 0)
@@ -132,32 +123,52 @@ export default {
         .attr('height', this.height)
         .attr('fill', '#ddd')
         .attr('opacity', 0.3);
-      console.timeEnd('time_draw_rect');
     },
-    draw_nan_area_rect(svg) {
-      console.time('time_draw_nan_rect');
-      let last_i = false;
+    draw_interpolate_area(svg) {
+      let last_value = false;
       let nan_start = 0;
       let nan_end = 0;
+      let interpolated_data = []
+      let d = {}
       for(let i in this.nanindex) {
-        if(this.nanindex[i] && !last_i) {
-          nan_start = i-1;
-          last_i = true;
-        }else if(!this.nanindex[i] && last_i) {
-          nan_end = +i;
-          last_i = false;
+        if(this.nanindex[i] && !last_value) {
+          // 欠損領域の開始
+          if(i > 0){
+            d = { 'x': i-1, 'y': this.line_data[i-1] };
+            interpolated_data.push(d);
+          }
 
-          svg.append('rect')
-            .attr('x', this.scale_x(nan_start))
-            .attr('y', this.height-5)
-            .attr('width', this.scale_x(nan_end) - this.scale_x(nan_start))
-            .attr('height', 10)
-            .attr('fill', '#aaa')
-            .attr('opacity', 0.3)
-            .attr('class', 'nan_area_rect');
+          d = { 'x': i, 'y': this.line_data[i] };
+          interpolated_data.push(d);
+          nan_start = i-1;
+          last_value = true;
+        }else if(last_value) {
+          // 欠損領域内
+          d = { 'x': i, 'y': this.line_data[i] };
+          interpolated_data.push(d);
+
+          if(!this.nanindex[i]) {
+            // 欠損領域の終了
+            nan_end = +i;
+            last_value = false;
+
+            // 軸にグレーの矩形をかぶせる
+            svg.append('rect')
+              .attr('x', this.scale_x(nan_start))
+              .attr('y', this.height-5)
+              .attr('width', this.scale_x(nan_end) - this.scale_x(nan_start))
+              .attr('height', 10)
+              .attr('fill', '#aaa')
+              .attr('opacity', 0.3)
+              .attr('class', 'nan_area_rect');
+
+            if(!this.has_null) {
+              this.draw_line(svg, interpolated_data, this.inverse_line, '#ef8200');
+              interpolated_data = []
+            }
+          }
         }
       }
-      console.timeEnd('time_draw_nan_rect');
     },
     draw_axis: function(svg) {
       svg.append('g')
@@ -166,7 +177,7 @@ export default {
         .call(d3.axisBottom(this.scale_x));
     },
     draw_graph: function() {
-      console.time('time_draw_row');
+      // console.time('time_draw_row');
       const self = this;
       if(self.timedata) {
         let svg = self.timeseries_element.append('svg')
@@ -179,31 +190,25 @@ export default {
             self.show_interpolate_selector = !self.show_interpolate_selector;
           });
 
-        this.draw_line(svg, this.line, '#5c94aa');
-        if(!this.has_null) {
-          this.draw_line(svg, this.inverse_line, '#ef8200');
-        }
+        this.draw_line(svg, this.line_data, this.line, '#5c94aa');
         this.draw_rect(svg);
-        this.draw_nan_area_rect(svg);
+        this.draw_interpolate_area(svg);
         this.draw_axis(svg);
       }
-      console.timeEnd('time_draw_row');
+      // console.timeEnd('time_draw_row');
     },
     update_rect: function() {
       let svg = this.timeseries_element.select('svg');
       svg.selectAll('rect').remove();
-      this.draw_nan_area_rect(svg);
       this.draw_rect(svg);
     },
-    update_path: function() {
+    update_graph: function() {
       let svg = this.timeseries_element.select('svg');
       svg.selectAll('path').remove();
       svg.selectAll('g').remove();
 
-      this.draw_line(svg, this.line, '#5c94aa');
-      if(!this.has_null) {
-        this.draw_line(svg, this.inverse_line, '#ef8200');
-      }
+      this.draw_line(svg, this.line_data, this.line, '#5c94aa');
+      this.draw_interpolate_area(svg);
       this.draw_axis(svg);
     },
     select_interpolate(val) {

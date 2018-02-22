@@ -51,7 +51,12 @@
         <histogram :id='index' :histdata='histdata'></histogram>
       </td>
       <td class='timeseries_graph'>
-        <timeseries :id='index' :timedata='histdata' :nanindex='nanindex'></timeseries>
+        <timeseries :id='index'
+          :timedata='histdata.slice(timeseries_range[0], timeseries_range[1])'
+          :nanindex='nanindex.slice(timeseries_range[0], timeseries_range[1])'
+          :miny='Math.min(...histdata)'
+          :maxy='Math.max(...histdata)'>
+        </timeseries>
       </td>
     </tr>
   </div>
@@ -73,6 +78,7 @@ export default {
           'percentile50', 'percentile75',
           'max', 'nancount', 'nanratio', 'nanindex',
           'interpolate', 'selected'],
+  computed: mapState(['timeseries_range']),
   methods: {
     select: function(event) {
       const value = {
@@ -81,6 +87,12 @@ export default {
       }
       this.$emit('select', value);
     }
+  },
+  created: function() {
+    this.$store.commit('set_loading', {'loading': true});
+  },
+  mounted: function() {
+    this.$store.commit('set_loading', {'loading': false});
   }
 }
 </script>

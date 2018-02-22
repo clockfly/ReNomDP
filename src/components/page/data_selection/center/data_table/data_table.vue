@@ -29,7 +29,7 @@
         </table-row-without-ts>
 
         <!-- with time series -->
-        <table-row-with-ts v-if='show_time_series && index < 10'
+        <table-row-with-ts v-if='show_time_series'
           v-for='(l, index) in data_header'
           :key='index'
           :index='index'
@@ -71,13 +71,7 @@ export default {
     'table-row-without-ts': TableRowWithoutTimeseries,
     'vue-slider': vueSlider,
   },
-  data: function() {
-    return {
-      range: [0, 0],
-    }
-  },
-  computed: {
-    ...mapState([
+  computed: mapState([
       'row',
       'interpolate_items',
       'show_time_series',
@@ -96,33 +90,11 @@ export default {
       'nan_index',
       'nan_count',
       'nan_ratio',
-      'interpolate_list']),
-    select_index: {
-      get: function() {
-        return this.$store.state.select_index;
-      },
-      set: function(val) {
-        this.$store.commit('set_select_index', {'val': val});
-      }
-    },
-  },
-  watch: {
-    row: function() {
-      if(this.row > 0) {
-        this.range.splice(0,this.range.length,0,this.row-1);
-        this.$store.commit('set_range', {'val': this.range});
-      }
-    }
-  },
+      'interpolate_list',
+      'select_index']),
   methods: {
     round: function(val) {
       return Math.round(val*100)/100;
-    },
-    set_interpolate_list: function(event, index) {
-      this.$store.dispatch('interpolate_column', {
-        'index': index,
-        'val': parseInt(event.target.value),
-      });
     },
     select: function(value) {
       this.$store.commit('set_select', {
@@ -152,7 +124,9 @@ export default {
   }
   table {
     max-height: calc(100vh - 150px);
+    background-color: $background-color;
     thead, tbody {
+      background-color: $background-color;
       border: none;
     }
   }
