@@ -155,12 +155,12 @@ export default {
       svg.append('path')
         .datum(range0)
         .attr('style', function(d) {
-          return 'fill: none; stroke: #999; stroke-dasharray: 5 2;'})
+          return 'fill: none; stroke: #f00; stroke-dasharray: 5 2;'})
         .attr('d', line);
       svg.append('path')
         .datum(range1)
         .attr('style', function(d) {
-          return 'fill: none; stroke: #999; stroke-dasharray: 5 2;'})
+          return 'fill: none; stroke: #f00; stroke-dasharray: 5 2;'})
         .attr('d', line);
     },
     draw_graph: function() {
