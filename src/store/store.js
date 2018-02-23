@@ -136,17 +136,7 @@ const store = new Vuex.Store({
       state.selected_column = payload.name;
     },
     set_timeseries_range: function(state, payload) {
-      const timeseries_range_max = 2000;
-      if((payload.val[1] - payload.val[0]) < timeseries_range_max){
-        state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);
-      }else{
-        if(payload.val[1] > state.timeseries_range[1]) {
-          state.timeseries_range.splice(0, state.timeseries_range.length, payload.val[1]-timeseries_range_max, payload.val[1]);
-        }else if(payload.val[0] < state.timeseries_range[0]) {
-          state.timeseries_range.splice(0, state.timeseries_range.length, payload.val[0], payload.val[0]+timeseries_range_max);
-        }
-      }
-
+      state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);
     },
     toggle_time_series: function(state, payload) {
       state.show_time_series = !state.show_time_series;
