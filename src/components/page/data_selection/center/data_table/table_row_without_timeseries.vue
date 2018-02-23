@@ -92,15 +92,18 @@ export default {
 
 <style lang='scss' scoped>
 .table_row {
-  $table-row-height: 92px;
+  $table-row-height: 91px;
   $background-color: #f8f8f8;
   $background-color-active: #f0f0f0;
+  $border-width: 1px;
   $border-color: #cccccc;
   $table-font-size: 10px;
 
   width: 100%;
+  height: calc(#{$table-row-height}+#{$border-width});
   border: none;
-  border-bottom: 1px solid $border-color;
+  border-bottom: $border-width solid $border-color;
+  box-sizing: border-box;
 
   td {
     height: $table-row-height;

@@ -30,30 +30,16 @@
     </tr>
 
     <tr class='all_selector_row' v-if='show_time_series && row > 0'>
-      <th class='range_selector'>{{range[0]}}〜{{range[1]}}</th>
+      <th class='range_selector'>{{timeseries_range[0]}}〜{{timeseries_range[1]}}</th>
       <th class='range_bar'>
-        <vue-slider v-if='row > 999' :value='timeseries_range'
-          :width='"100%"' :height='4' :dotSize='6'
+        <vue-slider :value='timeseries_range'
+          :width='"100%"' :height='6' :dotSize='9'
           :min='0' :max='row-1' :disable='false' :show='true'
           :tooltip='false'
           :style='{"padding": 0}'
-          :bgStyle='{"backgroundColor": "#f8f8f8"}'
-          :processStyle='{"backgroundColor": "#f8f8f8"}'
-          :sliderStyle='{"width": 0, "height": 0,
-            "border": "4px solid transparent",
-            "border-top": "4px solid #999",
-            "box-shadow": "0px 0px",
-            "border-radius": "0" }'
-          @callback='change_timeseries_range'></vue-slider>
-
-        <vue-slider :value='range'
-          :width='"100%"' :height='4' :dotSize='6'
-          :min='0' :max='row-1' :disable='false' :show='true'
-          :tooltip='false'
-          :style='{"z-index": 999}'
           :bgStyle='{"backgroundColor": "#ccc"}'
           :processStyle='{"backgroundColor": "#0762ad"}'
-          @callback='change_range'></vue-slider>
+          @callback='change_timeseries_range'></vue-slider>
       </th>
     </tr>
   </div>
@@ -68,18 +54,16 @@ export default {
   components: {
     'vue-slider': vueSlider,
   },
-  computed: mapState(['row', 'show_time_series', 'range',
+  computed: mapState(['row', 'show_time_series',
     'timeseries_range', 'selected_column']),
   methods: {
-    change_range: function(val) {
-      this.$store.commit('set_range', {'val': val});
-    },
     change_timeseries_range: function(val) {
       this.$store.commit('set_timeseries_range', {'val': val});
+      this.$nextTick(function(){});
     },
     select_column: function(name) {
       this.$store.commit('set_select_column_name', {'name': name});
-    }
+    },
   }
 }
 </script>
@@ -126,8 +110,7 @@ export default {
     }
     .range_bar {
       flex-grow: 14;
-      height: 100%;
-      padding-top: 8px;
+      padding-top: 14px;
       padding-right: 12px;
     }
   }

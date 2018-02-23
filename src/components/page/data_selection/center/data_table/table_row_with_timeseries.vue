@@ -52,8 +52,9 @@
       </td>
       <td class='timeseries_graph'>
         <timeseries :id='index'
-          :timedata='histdata.slice(timeseries_range[0], timeseries_range[1]+1)'
+          :timedata='timedata.slice(timeseries_range[0], timeseries_range[1]+1)'
           :nanindex='nanindex.slice(timeseries_range[0], timeseries_range[1]+1)'
+          :interpolateindex='interpolateindex'
           :miny='Math.min(...histdata)'
           :maxy='Math.max(...histdata)'>
         </timeseries>
@@ -73,11 +74,12 @@ export default {
     'histogram': Histogram,
     'timeseries': TimeSeries,
   },
-  props: ['index', 'isnum', 'histdata', 'colname', 'mean',
+  props: ['index', 'isnum', 'histdata', 'timedata',
+          'colname', 'mean',
           'vari', 'std', 'min', 'percentile25',
           'percentile50', 'percentile75',
           'max', 'nancount', 'nanratio', 'nanindex',
-          'interpolate', 'selected'],
+          'interpolateindex', 'interpolate', 'selected'],
   computed: mapState(['timeseries_range', 'selected_column']),
   methods: {
     select: function(event) {

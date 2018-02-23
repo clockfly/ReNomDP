@@ -44,6 +44,46 @@ def get_hist_from_npdata(number_index, data):
     return hist_data
 
 
+def get_time_from_npdata(number_index, data):
+    time_data = []
+    for i, val in enumerate(number_index):
+        if val:
+            d = ['' if np.isnan(d) else str(d) for d in data[:, i]]
+            time_data.append(d)
+        else:
+            time_data.append([])
+    return time_data
+
+
+# 補間領域を取得
+def get_interpolate_index(nan_index):
+    interpolate_index = []
+    nan_index_t = np.array(nan_index.T)
+    zeros = np.zeros([nan_index_t.shape[0], 1])
+    a = np.concatenate([nan_index_t[:, 1:], zeros], axis=1) == 1
+    b = np.concatenate([zeros, nan_index_t[:, :-1]], axis=1) == 1
+    c = np.logical_or(nan_index_t, a)
+    bool_interpolate_area = np.logical_or(b, c)
+
+    indexes = np.where(bool_interpolate_area == 1)
+    interpolate_index = [[] for i in range(nan_index_t.shape[0])]
+
+    s = []
+    for i, v in enumerate(np.diff(indexes[1], n=1)):
+        if v == 1:
+            s.append(str(indexes[1][i]))
+        else:
+            s.append(str(indexes[1][i]))
+            interpolate_index[indexes[0][i]].append(s)
+            s = []
+
+    if len(indexes[1]) > 0:
+        s.append(str(indexes[1][-1]))
+        interpolate_index[indexes[0][-1]].append(s)
+
+    return interpolate_index
+
+
 @route('/', method='GET')
 def index():
     return static_file('index.html', root='.')
@@ -90,8 +130,11 @@ def load_file(file_id):
         number_data = number_data.astype('float')
 
         hist_data = get_hist_from_npdata(number_index, number_data)
+        time_data = get_time_from_npdata(number_index, number_data)
 
         nan_index = file_data.isnull()
+        interpolate_index = get_interpolate_index(nan_index)
+
         nan_count = nan_index.sum().astype(np.float)
         nan_ratio = (nan_count / file_data.shape[0]).astype(np.float)
         interpolate_list = np.zeros(nan_index.shape[1])
@@ -110,7 +153,9 @@ def load_file(file_id):
             'columns': file_data.shape[1],
             'data_header': data_header.tolist(),
             'number_index': number_index.tolist(),
+            'interpolate_index': interpolate_index,
             'hist_data': hist_data,
+            'time_data': time_data,
             'data_mean': data_mean.tolist(),
             'data_var': data_var.tolist(),
             'data_std': data_std.tolist(),
@@ -128,6 +173,17 @@ def load_file(file_id):
         body = json.dumps({"error_msg": e.args[0]})
     r = create_response(body)
     return r
+
+
+@route('/api/files/<file_id:int>/download', method='GET')
+def download_file(file_id):
+    try:
+        file_name = get_file_name_from_id(file_id)
+        return static_file(file_name, root=DATA_DIR, download=True)
+    except Exception as e:
+        body = json.dumps({"error_msg": e.args[0]})
+        r = create_response(body)
+        return r
 
 
 @route('/api/files/<file_id:int>/export', method='POST')
@@ -189,36 +245,6 @@ def export_file(file_id):
         return ret
 
 
-@route('/api/files/<file_id:int>/columns/interpolate', method='GET')
-def interpolate_columns(file_id):
-    try:
-        file_name = get_file_name_from_id(file_id)
-        file_data = pd.read_csv(os.path.join(DATA_DIR, file_name), encoding=ENCODING)
-        interpolate_method = int(request.query['interpolate_method'])
-
-        number_index = get_number_index_from_dataframe(file_data)
-        number_data = np.array(file_data.loc[:, number_index])
-
-        nan_index = file_data.isnull()
-
-        interpolated_data = np.zeros(file_data.shape)
-        if interpolate_method > 0:
-            interpolated_data[:, number_index] += interpolate(number_data, mode=INTERPOLATE_ITEMS[interpolate_method])
-        else:
-            interpolated_data[:, number_index] += number_data
-
-        hist_data = get_hist_from_npdata(number_index, interpolated_data)
-
-        body = json.dumps({
-            'interpolated_data': hist_data,
-            'nan_index': nan_index.T.tolist(),
-        })
-    except Exception as e:
-        body = json.dumps({"error_msg": e.args[0]})
-    ret = create_response(body)
-    return ret
-
-
 @route('/api/files/<file_id:int>/columns/<column_index:int>/interpolate',
        method='GET')
 def interpolate_column(file_id, column_index):
@@ -232,13 +258,17 @@ def interpolate_column(file_id, column_index):
         nan_index = nan_index[:, column_index].reshape(-1)
 
         if interpolate_method > 0:
-            interpolated_data = interpolate(data, mode=INTERPOLATE_ITEMS[interpolate_method])
+            hist_data = interpolate(data, mode=INTERPOLATE_ITEMS[interpolate_method])
+            time_data = hist_data
         else:
-            interpolated_data = data[~nan_index]
+            hist_data = data[~nan_index]
+            time_data = data
+
+        time_data = ['' if np.isnan(d) else str(d) for d in time_data]
 
         body = json.dumps({
-            'interpolated_data': interpolated_data.tolist(),
-            'nan_index': nan_index.tolist(),
+            'hist_data': hist_data.tolist(),
+            'time_data': time_data,
         })
     except Exception as e:
         body = json.dumps({"error_msg": e.args[0]})
@@ -287,6 +317,6 @@ if __name__ == '__main__':
     observer = Observer()
     observer.schedule(handler, DATA_DIR, recursive=False)
     observer.start()
-    run(host=args.host, port=args.port)
+    run(host=args.host, port=args.port, reloader=True)
     observer.stop()
     observer.join()

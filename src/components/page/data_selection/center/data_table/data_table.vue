@@ -23,7 +23,7 @@
           :percentile75='round(data_75percentile[index])'
           :max='round(data_max[index])'
           :nancount='nan_count[index]'
-          :nanratio='nan_ratio[index]*100+"%"'
+          :nanratio='round(nan_ratio[index])*100+"%"'
           :selected='select_index.indexOf(index) != -1'
           @select='select'>
         </table-row-without-ts>
@@ -35,6 +35,7 @@
           :index='index'
           :isnum='number_index[index]'
           :histdata='hist_data[index]'
+          :timedata='time_data[index]'
           :colname='l'
           :mean='round(data_mean[index])'
           :vari='round(data_var[index])'
@@ -47,6 +48,7 @@
           :nancount='nan_count[index]'
           :nanratio='nan_ratio[index]*100+"%"'
           :nanindex='nan_index[index]'
+          :interpolateindex='interpolate_index[index]'
           :interpolate='interpolate_items[interpolate_list[index]]'
           :selected='select_index.indexOf(index) != -1'
           @select='select'>
@@ -76,8 +78,10 @@ export default {
       'interpolate_items',
       'show_time_series',
       'number_index',
+      'interpolate_index',
       'number_data',
       'hist_data',
+      'time_data',
       'data_header',
       'data_mean',
       'data_var',
@@ -123,7 +127,7 @@ export default {
     padding: 0;
   }
   table {
-    max-height: calc(100vh - 150px);
+    max-height: 100%;
     background-color: $background-color;
     thead, tbody {
       background-color: $background-color;

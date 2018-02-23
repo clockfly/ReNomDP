@@ -8,7 +8,7 @@
     </div>
 
     <button class='load_button' @click='load'>
-      <i class="fa fa-download" aria-hidden='true'></i> Load File
+      <i class="fa fa-file-o" aria-hidden='true'></i> Load File
     </button>
   </div>
 </template>

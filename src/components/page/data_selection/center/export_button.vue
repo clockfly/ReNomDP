@@ -1,6 +1,8 @@
 <template>
   <div id='export_button'>
-    <button @click='export_data'><i class="fa fa-upload" aria-hidden='true'></i> Export File</button>
+    <button @click='export_data'>
+      <i class="fa fa-pencil-square-o" aria-hidden='true'></i> Export File
+    </button>
   </div>
 </template>
 

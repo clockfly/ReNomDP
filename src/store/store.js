@@ -18,7 +18,9 @@ const store = new Vuex.Store({
     columns: 0,
     data_header: [],
     number_index: undefined,
+    interpolate_index: undefined,
     hist_data: undefined,
+    time_data: undefined,
     data_mean: undefined,
     data_var: undefined,
     data_std: undefined,
@@ -49,8 +51,11 @@ const store = new Vuex.Store({
       state.columns = payload.data.columns;
       state.data_header = payload.data.data_header;
       state.number_index = payload.data.number_index;
-      state.number_data = payload.data.number_data;
+      state.interpolate_index = payload.data.interpolate_index;
+
       state.hist_data = payload.data.hist_data;
+      state.time_data = payload.data.time_data;
+
       state.data_mean = payload.data.data_mean;
       state.data_var = payload.data.data_var;
       state.data_std = payload.data.data_std;
@@ -60,6 +65,7 @@ const store = new Vuex.Store({
       state.data_75percentile = payload.data.data_75percentile;
       state.data_max = payload.data.data_max;
       state.nan_index = payload.data.nan_index;
+
       state.nan_count = payload.data.nan_count;
       state.nan_ratio = payload.data.nan_ratio;
       state.interpolate_list = payload.data.interpolate_list;
@@ -83,16 +89,10 @@ const store = new Vuex.Store({
     },
     set_interpolate_column: function(state, payload) {
       if(state.hist_data) {
-        state.hist_data[payload.index].splice(0, state.hist_data[payload.index].length, ...payload.interpolated_data);
-        state.nan_index[payload.index].splice(0, state.nan_index[payload.index].length, ...payload.nan_index);
+        state.hist_data[payload.index].splice(0, state.hist_data[payload.index].length, ...payload.hist_data);
       }
-    },
-    set_interpolate_columns: function(state, payload) {
-      if(state.hist_data) {
-        for(let i=0; i<state.hist_data.length; i++) {
-          state.hist_data[i].splice(0, state.hist_data[i].length, ...payload.interpolated_data[i])
-          state.nan_index[i].splice(0, state.nan_index[i].length, ...payload.nan_index[i])
-        }
+      if(state.time_data) {
+        state.time_data[payload.index].splice(0, state.time_data[payload.index].length, ...payload.time_data);
       }
     },
     set_interpolate_list: function(state, payload) {
@@ -100,6 +100,13 @@ const store = new Vuex.Store({
     },
     set_range: function(state, payload) {
       state.range.splice(0, state.range.length, ...payload.val);
+    },
+    set_range_with_index: function(state, payload) {
+      if(payload.val >= 0 && payload.val < state.row) {
+        state.range.splice(payload.index, 1, payload.val);
+      }else{
+        alert('please input range: 0 〜 '+(state.row-1));
+      }
     },
     set_select: function(state, payload) {
       for(let i in state.select_index) {
@@ -129,7 +136,17 @@ const store = new Vuex.Store({
       state.selected_column = payload.name;
     },
     set_timeseries_range: function(state, payload) {
-      state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);
+      const timeseries_range_max = 2000;
+      if((payload.val[1] - payload.val[0]) < timeseries_range_max){
+        state.timeseries_range.splice(0, state.timeseries_range.length, ...payload.val);
+      }else{
+        if(payload.val[1] > state.timeseries_range[1]) {
+          state.timeseries_range.splice(0, state.timeseries_range.length, payload.val[1]-timeseries_range_max, payload.val[1]);
+        }else if(payload.val[0] < state.timeseries_range[0]) {
+          state.timeseries_range.splice(0, state.timeseries_range.length, payload.val[0], payload.val[0]+timeseries_range_max);
+        }
+      }
+
     },
     toggle_time_series: function(state, payload) {
       state.show_time_series = !state.show_time_series;
@@ -211,31 +228,14 @@ const store = new Vuex.Store({
 
         context.commit('set_interpolate_column', {
           'index': payload.index,
-          'interpolated_data': response.data.interpolated_data,
+          'hist_data': response.data.hist_data,
+          'time_data': response.data.time_data,
           'nan_index': response.data.nan_index,
         })
         context.commit('set_loading', {'loading': false});
         return;
       });
-    },
-    // interpolate_all(context, payload) {
-    //   context.commit('set_loading', {'loading': true});
-    //   const url = '/api/files/'+context.state.file_id+'/columns/interpolate?interpolate_method='+payload.val
-    //   return axios.get(url).then(function(response){
-    //     if(response.data.error_msg) {
-    //       alert(response.data.error_msg);
-    //       context.commit('set_loading', {'loading': false});
-    //       return;
-    //     }
-
-    //     context.commit('set_interpolate_columns', {
-    //       'interpolated_data': response.data.interpolated_data,
-    //       'nan_index': response.data.nan_index,
-    //     });
-    //     context.commit('set_loading', {'loading': false});
-    //     return;
-    //   });
-    // }
+    }
   },
 })
 
