@@ -70,6 +70,7 @@ const store = new Vuex.Store({
       state.nan_ratio = payload.data.nan_ratio;
       state.interpolate_list = payload.data.interpolate_list;
 
+      // 500行以上の時は時系列表示を500行分表示する
       if(state.row > 500) {
         state.timeseries_range.splice(0, state.timeseries_range.length, 0, 500);
       }else{

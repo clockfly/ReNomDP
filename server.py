@@ -232,52 +232,66 @@ def export_file(file_id):
         if not re.match(r'[a-zA-Z0-9]*.csv', out_file_name):
             out_file_name += '.csv'
 
-        # timeseries flag
+        # 時系列表示をしているかどうか
         timeseries = int(request.params.timeseries)
-        # use data column index
+
+        # 選択された列のインデックスのリストを取得
         select_index = request_list_to_np_array(request.params.select_index)
-        # interpolate methods
+
+        # 補間方法の選択した項目のリストを取得
         interpolate_list = request_list_to_np_array(request.params.interpolate_list)
-        # row range
+
+        # 選択した行のインデックスを取得
         row_range = request_list_to_np_array(request.params.row_range)
 
-        # load src file data
+        # 選択したファイルを読み込み
         file_name = get_file_name_from_id(file_id)
         file_data = pd.read_csv(os.path.join(DATA_DIR, file_name))
 
-        # selected data
+        # 選択したデータを抽出
         select_file_data = file_data.iloc[:, select_index]
 
-        # number data index of selected data
+        # 選択したデータから数値データを抽出
         number_index = get_number_index_from_dataframe(select_file_data)
         number_columns = np.array(select_file_data.columns)[number_index]
         number_data = select_file_data.loc[:, number_index]
 
-        # timeseries interpolation
+        # 補間を行う
         if timeseries == 1:
-            # interpolate number data
+            # 時系列データの補間
+            # 補間データを格納する行列を初期化
             output_data = np.zeros((file_data.shape[0], len(number_index[number_index])))
 
+            # 補間手法でループ
             for (index, item) in enumerate(INTERPOLATE_ITEMS):
                 loc = interpolate_list[select_index][number_index] == index
 
                 if index == 0:
+                    # 補間しないとき
                     d = number_data.loc[:, loc]
                 else:
+                    # 手法に応じて補間
                     d = interpolate(np.array(number_data.loc[:, loc]), mode=INTERPOLATE_ITEMS[index])
+
+                # 補間結果を反映する
                 output_data[:, loc] += d
         else:
+            # 時系列じゃないときはなにもしない
             output_data = number_data
 
-        # add text data
+        # 文字列データを取得
         text_columns = np.array(select_file_data.columns)[~number_index]
+
+        # 数値データと文字列データを連結
         columns = np.concatenate([number_columns, text_columns])
         output_data = np.concatenate([output_data, select_file_data.loc[:, ~number_index]], axis=1)
 
+        # データフレームを作成して出力
         df = pd.DataFrame(output_data[row_range[0]:row_range[1]+1], columns=columns)
         output_file = os.path.join(DATA_DIR, out_file_name)
         df.to_csv(output_file, index=None)
-        # wait watchdog regist file data in db
+
+        # watchdogが作成したデータをDBに反映するのを待つ
         time.sleep(0.5)
     except Exception as e:
         body = json.dumps({"error_msg": e.args[0]})
@@ -289,6 +303,7 @@ def export_file(file_id):
        method='GET')
 def interpolate_column(file_id, column_index):
     try:
+        # カラム単位で補間する
         file_name = get_file_name_from_id(file_id)
         file_data = pd.read_csv(os.path.join(DATA_DIR, file_name), encoding=ENCODING)
         interpolate_method = int(request.query['interpolate_method'])
@@ -297,6 +312,7 @@ def interpolate_column(file_id, column_index):
         nan_index = np.array(file_data.isnull())
         nan_index = nan_index[:, column_index].reshape(-1)
 
+        # 補間後のヒストグラムと時系列データを作成
         if interpolate_method > 0:
             hist_data = interpolate(data, mode=INTERPOLATE_ITEMS[interpolate_method])
             time_data = hist_data
