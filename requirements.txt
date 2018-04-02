@@ -1,4 +1,4 @@
-numpy
-pandas
-bottle
-watchdog
+numpy==1.13.0
+pandas==0.20.3
+bottle==0.12.13
+watchdog==0.8.3
