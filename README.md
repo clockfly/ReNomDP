@@ -26,7 +26,13 @@ Then install all required packages.
 
 `cd ReNomDP`
 
-2.Run server.py script and the application server starts.
+2. Create data directory, and put your csv file to here.
+
+`mkdir data`
+
+`cp <csvfile path> <ReNom DP installed path>/ReNomDP/data/`
+
+3.Run server.py script and the application server starts.
 
 `python server.py`
 
