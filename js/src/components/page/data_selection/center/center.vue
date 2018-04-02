@@ -15,7 +15,7 @@
     </div>
 
     <div class='data_export_area margin_top_16 margin_bottom_16'>
-      <download-button class='margin_right_48'></download-button>
+      <!-- <download-button class='margin_right_48'></download-button> -->
       <export-button class='margin_right_48'></export-button>
       <export-range-selector class='margin_right_48'></export-range-selector>
     </div>
