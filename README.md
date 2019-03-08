@@ -17,7 +17,7 @@ If you haven't install ReNom, you must install ReNom from www.renom.jp.
 
 For installing ReNomDP, download the repository from following url.
 
-`git clone https://gitlab.com/grid-devs/ReNomDP.git`
+`https://github.com/ReNom-dev-team/ReNomDP`
 
 And move into ReNomDP directory.
 `cd ReNomDP`
