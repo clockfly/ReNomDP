@@ -227,6 +227,7 @@ $axis-text-color: #999999;
     background-color: #666666;
     .item {
       color: #cccccc;
+      cursor: pointer;
     }
     .active {
       color: #ffffff;

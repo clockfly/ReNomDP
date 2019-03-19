@@ -1,5 +1,5 @@
 <template>
-  <div id='select_all_button'>
+  <div id='select_all_button' @click="set_select_all">
     <i class="fa fa-square" aria-hidden="true" v-if='selected_all'></i>
     <i class="fa fa-square-o" aria-hidden="true" v-if='!selected_all'></i>
     <input type='checkbox' id='select_all' @change='set_select_all'>
