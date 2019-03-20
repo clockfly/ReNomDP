@@ -1,5 +1,4 @@
-
-# ReNomDP
+# ReNomDP v0.1.2 beta
 
 ReNom DP is data preprocess tool.
 
